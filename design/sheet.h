@@ -4,9 +4,19 @@
 #include "common.h"
 
 #include <functional>
+#include <unordered_map>
+
+class PositionHasher {
+public:
+    size_t operator()(const Position p) const {
+        return std::hash<std::string>()(p.ToString());
+    }
+};
 
 class Sheet : public SheetInterface {
 public:
+    using Table = std::unordered_map<Position, std::unique_ptr<Cell>, CHasher, CComparator>;
+
     ~Sheet();
 
     void SetCell(Position pos, std::string text) override;
@@ -21,14 +31,9 @@ public:
     void PrintValues(std::ostream& output) const override;
     void PrintTexts(std::ostream& output) const override;
 
-    const Cell* GetConcreteCell(Position pos) const;
-    Cell* GetConcreteCell(Position pos);
+    const Cell* GetCellPtr(Position pos) const;
+    Cell* GetCellPtr(Position pos);
 
 private:
-    void MaybeIncreaseSizeToIncludePosition(Position pos);
-    void PrintCells(std::ostream& output,
-                    const std::function<void(const CellInterface&)>& printCell) const;
-    Size GetActualSize() const;
-
-    std::vector<std::vector<std::unique_ptr<Cell>>> cells_;
+    Table cells_;
 };
